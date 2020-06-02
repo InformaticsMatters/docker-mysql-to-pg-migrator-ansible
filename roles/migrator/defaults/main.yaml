@@ -11,4 +11,4 @@ migrator_nfs_server: SetMe
 migrator_nfs_path: SetMe
 
 # The migrator image (informaticsmatters/mysql-to-pg-migrator) tag...
-migrator_image_tag: 13
+migrator_image_tag: latest
