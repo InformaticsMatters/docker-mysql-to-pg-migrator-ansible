@@ -36,7 +36,7 @@ spec:
 
       containers:
       - name: nfs-migrator
-        image: informaticsmatters/mysql-to-pg-migrator:{{ migrator_image_tag }}'
+        image: informaticsmatters/mysql-to-pg-migrator:{{ migrator_image_tag }}
 {% if migrator_image_tag in ['latest', 'stable'] %}
         imagePullPolicy: Always
 {% else %}
