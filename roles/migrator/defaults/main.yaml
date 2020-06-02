@@ -1,0 +1,14 @@
+---
+
+# The namespace to run the migrator in.
+# It's here we expect to find PostgreSQL database secrets
+# (in the secret named 'database')
+migrator_namespace: SetMe
+
+# The NFS server where we can find the
+# MySQL data for migration...
+migrator_nfs_server: SetMe
+migrator_nfs_path: SetMe
+
+# The migrator image (informaticsmatters/mysql-to-pg-migrator) tag...
+migrator_image_tag: 13

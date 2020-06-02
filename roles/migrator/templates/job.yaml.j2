@@ -1,0 +1,76 @@
+---
+
+# Job that relies on a statically-provisioned NFS export.
+# The migrator uses this volume to migrate MySQL data to PostgreSQL.
+# The volume is expected to be mounted at '/import'.
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nfs-migrator
+  namespace: {{ migrator_namespace }}
+spec:
+  # Clean-up completed (or failed) Jobs
+  # after 5 minutes...
+  ttlSecondsAfterFinished: 300
+
+  template:
+    metadata:
+      labels:
+        name: nfs-migrator
+    spec:
+      serviceAccountName: {{ migrator_sa_name }}
+
+      # A 'preferred' (not guaranteed)
+      # node selection affinity...
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: purpose
+                operator: In
+                values:
+                - {{ migrator_node_purpose }}
+
+      containers:
+      - name: nfs-replicator
+        image: informaticsmatters/mysql-to-pg-migrator:{{ migrator_image_tag }}'
+{% if migrator_image_tag in ['latest', 'stable'] %}
+        imagePullPolicy: Always
+{% else %}
+        imagePullPolicy: IfNotPresent
+{% endif %}
+        terminationMessagePolicy: FallbackToLogsOnError
+        resources:
+          limits:
+            cpu: {{ migrator_cpu_limit }}
+            memory: {{ migrator_mem_limit }}
+          requests:
+            cpu: {{ migrator_cpu_request }}
+            memory: {{ migrator_mem_request }}
+        env:
+        - name: POSTGRESQL_USER
+          value: fragalysis
+        - name: POSTGRESQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: database
+              key: user_password
+        - name: POSTGRESQL_HOST
+          value: database
+        - name: POSTGRESQL_PORT
+          value: 5432
+        volumeMounts:
+        - name: import
+          mountPath: /import
+
+      volumes:
+      - name: volume-a
+        nfs:
+          server: {{ migrator_nfs_server }}
+          path: {{ migrator_nfs_path }}
+
+      restartPolicy: Never
+  backoffLimit: 1

@@ -1,0 +1,102 @@
+---
+
+# Common playbook preparation.
+
+# Expose ansible version
+- debug:
+    var: ansible_version.full
+
+# Before moving on, this play is expected to be executed from an AWX/Tower
+# instance. If so, a number of AWX/Tower variables should be injected.
+# See https://docs.ansible.com/ansible-tower/latest/html/userguide/job_templates.html
+# for an up-to-date set, but ones we rely on in order to protect the
+# job for malfunctioning are: -
+#
+# - tower_user_id (the ID, a number, used to create a unique namespace)
+# - tower_user_name (The username for logging)
+
+- name: Assert AWX user_id defined
+  assert:
+    that:
+    - tower_user_id is defined
+    fail_msg: This job must run from AWX but the 'user_id' has not been defined
+
+- name: Assert AWX user_id value
+  assert:
+    that:
+    - tower_user_id|int > 0
+    fail_msg: The 'user_id' is invalid ({{ tower_user_id }})
+
+- name: Assert AWX user_name
+  assert:
+    that:
+    - tower_user_name is defined
+    - tower_user_name|string|length > 0
+    fail_msg: >-
+      This job must run from AWX but the 'user_name'
+      were either not defined or blank.
+
+- name: Developer stack preparation
+  block:
+
+  # If developer then the namespace must not be set.
+
+  - name: Check namespace value (developer)
+    assert:
+      that:
+      - stack_namespace|string|length == 0
+
+  # Also, check the stack name provided.
+  # It cannot be blank and must only consist of lower-case letters.
+  # It will form the basis of the namespace and ingress.
+
+  - name: Check stack name
+    assert:
+      that: stack_name is match('[a-z]+')
+      fail_msg: >-
+        You must prove a value for stack_name.
+        It cannot be blank must only contain lower-case letters.
+
+  - name: Set namespace fact (for user_id '{{ tower_user_id }}')
+    set_fact:
+      stack_namespace: stack-{{ tower_user_id }}-{{ stack_name }}
+
+  when: stack_is_for_developer|bool
+
+- name: Non-developer stack preparation
+  block:
+
+  # If non-developer then the namespace must be set.
+
+  - name: Check namespace value (non-developer)
+    assert:
+      that:
+      - stack_namespace|string|length > 0
+
+  when: not stack_is_for_developer|bool
+
+# Basic pre-playbook prerequisites.
+# We need the openshift/kubernetes module amongst other things...
+
+- name: Install prerequisite Python modules
+  pip:
+    name:
+    - kubernetes==10.0.1
+    - openshift==0.10.0
+    - jmespath==0.9.4
+    extra_args: --user
+
+# Kubernetes credentials ------------------------------------------------------
+
+# We don't use the Kubernetes credentials directly,
+# but we load them into variables here from their
+# expected environment variables so that we can assert they've been set.
+#
+# If we're using OpenShift credentials these environment variables
+# will not be set and we will therefore rely on them being set
+# from the 'login.yaml' play.
+
+- name: Set initial authentication facts
+  set_fact:
+    k8s_auth_host: "{{ lookup('env', 'K8S_AUTH_HOST') }}"
+    k8s_auth_api_key: "{{ lookup('env', 'K8S_AUTH_API_KEY') }}"

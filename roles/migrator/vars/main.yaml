@@ -1,0 +1,16 @@
+---
+
+# The service account (typically stack)
+migrator_sa_name: stack
+
+# Purpose label for the desired execution node
+migrator_node_purpose: application
+
+# Container requests/limits
+migrator_cpu_limit: 500m
+migrator_mem_limit: 128Mi
+migrator_cpu_request: 10m
+migrator_mem_request: 128Mi
+
+# Job execution timeout
+migrator_timeout_minutes: 5
