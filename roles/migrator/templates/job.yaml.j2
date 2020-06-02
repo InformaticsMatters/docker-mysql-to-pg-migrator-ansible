@@ -69,7 +69,7 @@ spec:
           mountPath: /import
 
       volumes:
-      - name: volume-a
+      - name: import
         nfs:
           server: {{ migrator_nfs_server }}
           path: {{ migrator_nfs_path }}
