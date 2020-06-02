@@ -35,7 +35,7 @@ spec:
                 - {{ migrator_node_purpose }}
 
       containers:
-      - name: nfs-replicator
+      - name: nfs-migrator
         image: informaticsmatters/mysql-to-pg-migrator:{{ migrator_image_tag }}'
 {% if migrator_image_tag in ['latest', 'stable'] %}
         imagePullPolicy: Always
@@ -62,6 +62,8 @@ spec:
           value: database
         - name: POSTGRESQL_PORT
           value: 5432
+        - name: POSTGRESQL_DATABASE
+          value: frag
         volumeMounts:
         - name: import
           mountPath: /import
