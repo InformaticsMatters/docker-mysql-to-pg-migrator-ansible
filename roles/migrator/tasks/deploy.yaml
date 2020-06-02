@@ -24,7 +24,7 @@
   assert:
     that: n_result.resources|length == 1
 
-- name: Get the databse secrets
+- name: Get the database secrets
   k8s_info:
     kind: Secret
     namespace: "{{ migrator_namespace }}"
