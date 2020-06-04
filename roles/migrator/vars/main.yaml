@@ -7,8 +7,8 @@ migrator_sa_name: stack
 migrator_node_purpose: application
 
 # Container requests/limits
-migrator_cpu_limit: 500m
-migrator_mem_limit: 128Mi
+migrator_cpu_limit: 1000m
+migrator_mem_limit: 2Gi
 migrator_cpu_request: 10m
 migrator_mem_request: 128Mi
 
